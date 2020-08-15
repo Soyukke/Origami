@@ -1,0 +1,27 @@
+{
+  "name": "origami",
+  "version": "1.0.0",
+  "description": "## 初期設定",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "tsc --watch",
+    "webpack": "webpack"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.119.1",
+    "typescript": "^3.9.7"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
+    "eslint": "^7.6.0",
+    "eslint-config-google": "^0.14.0",
+    "ts-loader": "^8.0.2",
+    "tsc-watch": "^4.2.9",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  }
+}
