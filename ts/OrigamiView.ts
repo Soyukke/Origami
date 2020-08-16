@@ -80,6 +80,9 @@ class View {
     const vec = new THREE.Vector3(
         (w/2)*self.mousePosition.x, (h/2)*self.mousePosition.y, 0,
     );
+    // const vec = new THREE.Vector3(
+    //     self.mousePosition.x, self.mousePosition.y, 0,
+    // ).unproject(self.camera);
     // vec.unproject(self.camera);
     // this.cube.position.set(this.mousePosition.x, this.mousePosition.y, 0);
     /**

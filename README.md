@@ -32,3 +32,28 @@ npm i -S three
 npm install --save-dev webpack
 npm install webpack-cli --save-dev
 ```
+
+## TODO
+
+## 初期表示
+.---.
+|   |
+.---.
+
+### 処理
+- クリックでノード追加
+
+### 表示
+- ノードは球で表示．
+- ガイドを表示する
+
+
+## グラフ
+
+### ノード
+
+- 座標(x, y)
+
+### エッジ
+
+- ノード1, ノード2
