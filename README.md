@@ -1,4 +1,6 @@
-#折り紙TypeScript
+# 折り紙
+
+https://soyukke.github.io/Origami/index.html
 
 ## 初期設定
 
