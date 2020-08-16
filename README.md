@@ -25,8 +25,7 @@ $ typings init
 $ typings install dt~three --save --global
 ```
 
-webpack
-
+フロントで実行するので，webpackを使ってjavascriptをまとめる．
 ```
 $ npm i -D ts-loader
 npm i -S three
