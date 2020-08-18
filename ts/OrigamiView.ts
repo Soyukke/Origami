@@ -21,7 +21,6 @@ class View {
    * コンストラクタ
    */
   constructor() {
-    this.initGraph();
     this.mousePosition = new THREE.Vector2(1, 1);
     // htmlからid="canvas"なElementを取得して利用する
     const canvas:HTMLCanvasElement|null = document.querySelector(this.canvasId);
@@ -61,22 +60,27 @@ class View {
     this.camera = new THREE.PerspectiveCamera(60, aspect, 1, d*2);
     // 指定の視野角で表示される領域が一致するようにする
     this.camera.position.z = d;
+
+    this.initGraph();
   }
 
   /**
    * 折り紙用グラフ初期化
    */
   private initGraph() {
-    const g = new MG.MetaGraph();
-    const n1 = new MG.Vertex({position: new THREE.Vector3(0, 0, 0)});
-    const n2 = new MG.Vertex({position: new THREE.Vector3(1, 0, 0)});
-    const n3 = new MG.Vertex({position: new THREE.Vector3(0, 1, 0)});
-    const n4 = new MG.Vertex({position: new THREE.Vector3(1, 1, 0)});
+    const g = new OrigamiGraph(this.scene);
+    const n1 = new MG.Vertex();
+    const n2 = new MG.Vertex();
+    const n3 = new MG.Vertex();
+    const n4 = new MG.Vertex();
     const e1 = new MG.Edge(n1, n2);
     const e2 = new MG.Edge(n1, n3);
     const e3 = new MG.Edge(n2, n4);
     const e4 = new MG.Edge(n3, n4);
-    g.addVertices(n1, n2, n3, n4);
+    g.addVertex(n1, new THREE.Vector3(-200, -200, 0));
+    g.addVertex(n2, new THREE.Vector3(-200, 200, 0));
+    g.addVertex(n3, new THREE.Vector3(200, -200, 0));
+    g.addVertex(n4, new THREE.Vector3(200, 200, 0));
     g.addEdges(e1, e2, e3, e4);
   }
 
@@ -198,6 +202,39 @@ class View {
   private debugLog(...data: any[]) {
     if (this.debug) {
       console.log(data);
+    }
+  }
+}
+
+/**
+ * ノードを描画したりする機能をのせる
+ */
+class OrigamiGraph extends MG.MetaGraph {
+  public scene:THREE.Scene;
+  /**
+   * 初期化
+   * @param {THREE.Scene} scene
+   */
+  constructor(scene:THREE.Scene) {
+    super();
+    this.scene = scene;
+  }
+
+  /**
+   * ノード追加
+   * @param {MG.Vertex} v
+   * @param {THREE.Vector3} vec
+   */
+  public addVertex(v:MG.Vertex, vec?:THREE.Vector3) {
+    super.addVertex(v);
+    const geometry = new THREE.SphereGeometry(50, 32, 32);
+    const material = new THREE.MeshBasicMaterial({color: 0xFF0000});
+    const sphere = new THREE.Mesh(geometry, material);
+    if (typeof vec !== 'undefined') {
+      sphere.position.set(vec.x, vec.y, vec.z);
+      this.scene.add(sphere);
+      v.setProp('vec', vec);
+      v.setProp('obj', sphere);
     }
   }
 }
