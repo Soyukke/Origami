@@ -112,6 +112,7 @@ class Vertex {
  * エッジ. 二つのノードを有する
  */
 class Edge {
+  private props:Dict = {};
   private vertex1:Vertex;
   private vertex2:Vertex;
 
@@ -138,5 +139,23 @@ class Edge {
  */
   public getNode2() {
     return this.vertex2;
+  }
+
+  /**
+   * プロパティを取得する
+   * @param {string} key
+   * @return {any}
+   */
+  public getProp(key:string) {
+    return this.props[key];
+  }
+
+  /**
+   * ノードにプロパティをセットする
+   * @param {string} key
+   * @param {any} value
+   */
+  public setProp(key:string, value:any) {
+    this.props[key] = value;
   }
 }

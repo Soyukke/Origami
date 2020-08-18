@@ -69,5 +69,5 @@ npm install webpack-cli --save-dev
 
 * [x] ノード追加時，ノードをsceneに追加
 * [ ] ノード削除時，ノードをsceneから削除
-* [ ] エッジ追加時，エッジをsceneに追加
+* [x] エッジ追加時，エッジをsceneに追加
 * [ ] エッジ削除時，エッジをsceneから削除

@@ -81,7 +81,10 @@ class View {
     g.addVertex(n2, new THREE.Vector3(-200, 200, 0));
     g.addVertex(n3, new THREE.Vector3(200, -200, 0));
     g.addVertex(n4, new THREE.Vector3(200, 200, 0));
-    g.addEdges(e1, e2, e3, e4);
+    g.addEdge(e1);
+    g.addEdge(e2);
+    g.addEdge(e3);
+    g.addEdge(e4);
   }
 
   /**
@@ -236,5 +239,34 @@ class OrigamiGraph extends MG.MetaGraph {
       v.setProp('vec', vec);
       v.setProp('obj', sphere);
     }
+  }
+
+  /**
+   * エッジ追加
+   * https://threejs.org/docs/#api/en/objects/Line
+   * 頂点1の座標と頂点2の座標をつなぐ線を表示する
+   * @param {MG.Edge} e
+   * @param {THREE.Vector3} vec
+   */
+  public addEdge(e:MG.Edge) {
+    super.addEdge(e);
+    const v1 = e.getNode1().getProp('vec');
+    const v2 = e.getNode2().getProp('vec');
+    const positions = new Float32Array(
+        [
+          v1.x, v1.y, v1.z,
+          v2.x, v2.y, v2.z,
+        ],
+    );
+    const geometry = new THREE.BufferGeometry();
+    geometry.addAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(positions, 3),
+    );
+    const material = new THREE.LineBasicMaterial({color: 0xAAAAAA});
+    const line = new THREE.Line(geometry, material);
+    this.scene.add(line);
+    // lineオブジェクトをエッジの情報として埋め込む
+    e.setProp('obj', line);
   }
 }
