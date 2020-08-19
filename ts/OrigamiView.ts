@@ -16,6 +16,7 @@ class View {
   private mousePosition: THREE.Vector2;
   private debug = false;
   private light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+  private g:OrigamiGraph;
 
   /**
    * コンストラクタ
@@ -61,6 +62,8 @@ class View {
     // 指定の視野角で表示される領域が一致するようにする
     this.camera.position.z = d;
 
+    // グラフ初期化
+    this.g = new OrigamiGraph(this.scene);
     this.initGraph();
   }
 
@@ -68,7 +71,6 @@ class View {
    * 折り紙用グラフ初期化
    */
   private initGraph() {
-    const g = new OrigamiGraph(this.scene);
     const n1 = new MG.Vertex();
     const n2 = new MG.Vertex();
     const n3 = new MG.Vertex();
@@ -77,14 +79,14 @@ class View {
     const e2 = new MG.Edge(n1, n3);
     const e3 = new MG.Edge(n2, n4);
     const e4 = new MG.Edge(n3, n4);
-    g.addVertex(n1, new THREE.Vector3(-200, -200, 0));
-    g.addVertex(n2, new THREE.Vector3(-200, 200, 0));
-    g.addVertex(n3, new THREE.Vector3(200, -200, 0));
-    g.addVertex(n4, new THREE.Vector3(200, 200, 0));
-    g.addEdge(e1);
-    g.addEdge(e2);
-    g.addEdge(e3);
-    g.addEdge(e4);
+    this.g.addVertex(n1, new THREE.Vector3(-200, -200, 0));
+    this.g.addVertex(n2, new THREE.Vector3(-200, 200, 0));
+    this.g.addVertex(n3, new THREE.Vector3(200, -200, 0));
+    this.g.addVertex(n4, new THREE.Vector3(200, 200, 0));
+    this.g.addEdge(e1);
+    this.g.addEdge(e2);
+    this.g.addEdge(e3);
+    this.g.addEdge(e4);
   }
 
   /**
@@ -123,7 +125,6 @@ class View {
     * (0,  0) (w, 0)
     * (0,  h) (w, h)
     */
-    console.log('cube vec: ', vec.x, vec.y, vec.z);
     self.cube.position.set(vec.x, vec.y, vec.z);
     self.debugLog(self.mousePosition);
 
@@ -196,6 +197,9 @@ class View {
   public render() {
     this.cubeRender();
     this.renderer.render(this.scene, this.camera);
+    this.g.updateEdgeColor(
+        new THREE.Vector3(this.mousePosition.x, this.mousePosition.y, 0),
+    );
     requestAnimationFrame(this.render.bind(this));
   }
 
@@ -268,5 +272,83 @@ class OrigamiGraph extends MG.MetaGraph {
     this.scene.add(line);
     // lineオブジェクトをエッジの情報として埋め込む
     e.setProp('obj', line);
+  }
+
+  /**
+   * 辺と点までの距離
+   * $$
+   * \cos \theta = \frac{\vec e_{i, j} \cdot \vec p}{|\vec e_{i,j}||\vec p|} \\
+   * d = \sin \theta |\vec p| \\
+   * \left(\frac{d}{|\vec p|}\right)^2
+   * +\left(\frac{\vec e_{i, j}
+   * \cdot \vec p}{|\vec e_{i,j}||\vec p|}\right)^2 = 1\\
+   * $$
+   *
+   * $$
+   * d = \sqrt{1 - \left(\frac{\vec e_{i, j} \cdot \vec p}
+   * {|\vec e_{i,j}|}\right)^2}
+   * $$
+   * @param {MG.Edge} e
+   * @param {THREE.Vector3} p
+   * @return {number} 距離
+   */
+  public distance(e:MG.Edge, p:THREE.Vector3) {
+    const v1:THREE.Vector3 = e.getNode1().getProp('vec');
+    const v2:THREE.Vector3 = e.getNode2().getProp('vec');
+    const e21 = v2.sub(v1);
+    const p1 = p.sub(v1);
+    console.log('distance: ', e21);
+    console.log('p1', p1);
+    const d = Math.sqrt(1 - (e21.dot(p1) / e21.length())^2);
+    return d;
+  }
+
+  /**
+   * すべてのエッジと点を比較し，最も点と近いエッジを求める
+   * @param {THREE.Vector3} p
+   * @return {Edge}
+   */
+  public nearestEdge(p:THREE.Vector3) {
+    const edges = this.getEdges();
+    console.log('nearestEdge: ', edges);
+    const distances = edges.map<number>(
+        (edge) => {
+          return this.distance(edge, p);
+        },
+    );
+    console.log('distances: ', distances);
+    const idx = distances.indexOf(Math.min(...distances));
+    console.log('idx: ', idx);
+    return edges[idx];
+  }
+
+  /**
+   * 指定されたEdgeの色をかえる．その他のエッジは元の色に設定
+   * @param {MG.Edge} e
+   */
+  public colorEdges(e:MG.Edge) {
+    const edges = this.getEdges();
+    edges.forEach(
+        (edge) => {
+          const line:THREE.Line = edge.getProp('obj');
+          (line.material as THREE.LineBasicMaterial).color =
+          new THREE.Color(0xAAAAAA);
+          line.material.needsUpdate = true;
+        },
+    );
+    const line:THREE.Line = e.getProp('obj');
+    (line.material as THREE.LineBasicMaterial).color =
+    new THREE.Color(0x00FF00);
+    line.material.needsUpdate = true;
+  }
+
+  /**
+   * Line色塗り
+   * @param {THREE.Vector3} p
+   */
+  public updateEdgeColor(p:THREE.Vector3) {
+    const edge = this.nearestEdge(p);
+    console.log('updateEdgeColor: ', edge);
+    this.colorEdges(edge);
   }
 }
