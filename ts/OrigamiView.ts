@@ -213,6 +213,8 @@ class View {
  */
 class OrigamiGraph extends MG.MetaGraph {
   public scene:THREE.Scene;
+  private nearestEdge_:MG.Edge|undefined;
+  private nearestVertex:MG.Vertex;
   /**
    * 初期化
    * @param {THREE.Scene} scene
@@ -220,6 +222,15 @@ class OrigamiGraph extends MG.MetaGraph {
   constructor(scene:THREE.Scene) {
     super();
     this.scene = scene;
+    this.nearestVertex = new MG.Vertex();
+    const geometry = new THREE.SphereGeometry(10, 16, 32);
+    const material = new THREE.MeshBasicMaterial({color: 0xFF00FF});
+    const sphere = new THREE.Mesh(geometry, material);
+    const vec = new THREE.Vector3(-200, -200, -200);
+    sphere.position.set(vec.x, vec.y, vec.z);
+    this.nearestVertex.setProp('vec', vec);
+    this.nearestVertex.setProp('obj', sphere);
+    this.scene.add(sphere);
   }
 
   /**
@@ -229,7 +240,7 @@ class OrigamiGraph extends MG.MetaGraph {
    */
   public addVertex(v:MG.Vertex, vec?:THREE.Vector3) {
     super.addVertex(v);
-    const geometry = new THREE.SphereGeometry(50, 32, 32);
+    const geometry = new THREE.SphereGeometry(10, 16, 32);
     const material = new THREE.MeshBasicMaterial({color: 0xFF0000});
     const sphere = new THREE.Mesh(geometry, material);
     if (typeof vec !== 'undefined') {
@@ -293,14 +304,39 @@ class OrigamiGraph extends MG.MetaGraph {
     const v2 = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
     const e21 = v2.sub(v1);
     const p1 = p.clone().sub(v1);
+    const e21DotP1 = e21.clone().dot(p1);
     console.log('mouse p', p);
+    const e21Norm = e21.length();
     const p1Norm = p1.length();
-    const d = Math.sqrt((p1Norm^2) - (e21.clone().dot(p1) / e21.length())^2);
+    const cos = e21DotP1/(e21Norm*p1Norm);
+    const sin = 1 - cos^2;
+    // const d = Math.sqrt((p1Norm^2) - (e21DotP1 / e21.length())^2);
+    const d = Math.abs(sin*p1Norm);
     if (Number.isNaN(d)) {
       // 座標pがエッジ上に存在する
       return 0;
     }
     return d;
+  }
+
+  /**
+   * 点pと最も近い辺e上の点qを求める
+   * @param {MG.Edge} e
+   * @param {THREE.Vector3} p
+   * @return {Vector3} q 座標
+   */
+  private getNearestVertex(e:MG.Edge, p:THREE.Vector3) {
+    const v1 = (e.getNode1().getProp('vec') as THREE.Vector3).clone();
+    const v2 = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
+    const e21 = v2.sub(v1);
+    const p1 = p.clone().sub(v1);
+    const e21DotP1 = e21.clone().dot(p1);
+    const e21Norm = e21.length();
+    const p1Norm = p1.length();
+    const cos = e21DotP1/(e21Norm*p1Norm);
+    const a = p1Norm*cos/e21Norm;
+    const q = v1.add(e21.clone().multiplyScalar(a));
+    return q;
   }
 
   /**
@@ -319,6 +355,7 @@ class OrigamiGraph extends MG.MetaGraph {
     console.log('distances: ', distances);
     const idx = distances.indexOf(Math.min(...distances));
     console.log('idx: ', idx);
+    this.nearestEdge_ = edges[idx];
     return edges[idx];
   }
 
@@ -348,7 +385,19 @@ class OrigamiGraph extends MG.MetaGraph {
    */
   public updateEdgeColor(p:THREE.Vector3) {
     const edge = this.nearestEdge(p);
+    this.updateVertexOnNearestEdge(edge, p);
     console.log('updateEdgeColor: ', edge);
     this.colorEdges(edge);
+  }
+
+  /**
+   * vertex
+   * @param {MG.Edge} edge
+   * @param {THREE.Vector3} p
+   */
+  public updateVertexOnNearestEdge(edge:MG.Edge, p:THREE.Vector3) {
+    const q = this.getNearestVertex(edge, p);
+    const sphere:THREE.Mesh = this.nearestVertex.getProp('obj');
+    sphere.position.set(q.x, q.y, q.z);
   }
 }
