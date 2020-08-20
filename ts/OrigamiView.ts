@@ -103,16 +103,11 @@ class View {
     const w = elm.offsetWidth;
     const h = elm.offsetHeight;
     // this.mousePosition = new THREE.Vector2((x / w) * 2 - 1, (y / h) * 2 + 1);
-    self.mousePosition.x = (x / w) * 2 - 1;
-    self.mousePosition.y = 1 - (y / h) * 2;
+    self.mousePosition.x = (w/2)*((x / w) * 2 - 1);
+    self.mousePosition.y = (h/2)*(1 - (y / h) * 2);
     const vec = new THREE.Vector3(
-        (w/2)*self.mousePosition.x, (h/2)*self.mousePosition.y, 0,
+        self.mousePosition.x, self.mousePosition.y, 0,
     );
-    // const vec = new THREE.Vector3(
-    //     self.mousePosition.x, self.mousePosition.y, 0,
-    // ).unproject(self.camera);
-    // vec.unproject(self.camera);
-    // this.cube.position.set(this.mousePosition.x, this.mousePosition.y, 0);
     /**
      * WebGL座標
      * (-w/2, h/2) (w/2, h/2)
@@ -285,7 +280,8 @@ class OrigamiGraph extends MG.MetaGraph {
    * $$
    *
    * $$
-   * d = \sqrt{1 - \left(\frac{\vec e_{i, j} \cdot \vec p}
+   * 点と線のベクトルが重なるとき(θ=0)のときは距離0ということにする
+   * d = \sqrt{|\vec p|^2 - \left(\frac{\vec e_{i, j} \cdot \vec p}
    * {|\vec e_{i,j}|}\right)^2}
    * $$
    * @param {MG.Edge} e
@@ -293,13 +289,17 @@ class OrigamiGraph extends MG.MetaGraph {
    * @return {number} 距離
    */
   public distance(e:MG.Edge, p:THREE.Vector3) {
-    const v1:THREE.Vector3 = e.getNode1().getProp('vec');
-    const v2:THREE.Vector3 = e.getNode2().getProp('vec');
+    const v1 = (e.getNode1().getProp('vec') as THREE.Vector3).clone();
+    const v2 = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
     const e21 = v2.sub(v1);
-    const p1 = p.sub(v1);
-    console.log('distance: ', e21);
-    console.log('p1', p1);
-    const d = Math.sqrt(1 - (e21.dot(p1) / e21.length())^2);
+    const p1 = p.clone().sub(v1);
+    console.log('mouse p', p);
+    const p1Norm = p1.length();
+    const d = Math.sqrt((p1Norm^2) - (e21.clone().dot(p1) / e21.length())^2);
+    if (Number.isNaN(d)) {
+      // 座標pがエッジ上に存在する
+      return 0;
+    }
     return d;
   }
 
