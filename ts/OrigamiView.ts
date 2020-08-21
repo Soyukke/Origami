@@ -79,10 +79,11 @@ class View {
     const e2 = new MG.Edge(n1, n3);
     const e3 = new MG.Edge(n2, n4);
     const e4 = new MG.Edge(n3, n4);
-    this.g.addVertex(n1, new THREE.Vector3(-200, -200, 0));
-    this.g.addVertex(n2, new THREE.Vector3(-200, 200, 0));
-    this.g.addVertex(n3, new THREE.Vector3(200, -200, 0));
-    this.g.addVertex(n4, new THREE.Vector3(200, 200, 0));
+    const L = 1000;
+    this.g.addVertex(n1, new THREE.Vector3(-L/2, -L/2, 0));
+    this.g.addVertex(n2, new THREE.Vector3(-L/2, L/2, 0));
+    this.g.addVertex(n3, new THREE.Vector3(L/2, -L/2, 0));
+    this.g.addVertex(n4, new THREE.Vector3(L/2, L/2, 0));
     this.g.addEdge(e1);
     this.g.addEdge(e2);
     this.g.addEdge(e3);
@@ -222,6 +223,8 @@ class OrigamiGraph extends MG.MetaGraph {
   constructor(scene:THREE.Scene) {
     super();
     this.scene = scene;
+
+    // 最も近い距離の辺上の点
     this.nearestVertex = new MG.Vertex();
     const geometry = new THREE.SphereGeometry(10, 16, 32);
     const material = new THREE.MeshBasicMaterial({color: 0xFF00FF});
@@ -309,8 +312,7 @@ class OrigamiGraph extends MG.MetaGraph {
     const e21Norm = e21.length();
     const p1Norm = p1.length();
     const cos = e21DotP1/(e21Norm*p1Norm);
-    const sin = 1 - cos^2;
-    // const d = Math.sqrt((p1Norm^2) - (e21DotP1 / e21.length())^2);
+    const sin = 1 - (cos**2);
     const d = Math.abs(sin*p1Norm);
     if (Number.isNaN(d)) {
       // 座標pがエッジ上に存在する
@@ -396,8 +398,34 @@ class OrigamiGraph extends MG.MetaGraph {
    * @param {THREE.Vector3} p
    */
   public updateVertexOnNearestEdge(edge:MG.Edge, p:THREE.Vector3) {
+    // 辺上に垂直におろした点の座標
     const q = this.getNearestVertex(edge, p);
-    const sphere:THREE.Mesh = this.nearestVertex.getProp('obj');
-    sphere.position.set(q.x, q.y, q.z);
+    // 点qが辺edge上に存在するならば座標をqへ移動する
+    if (this.isPositionOnEdge(edge, q)) {
+      const sphere:THREE.Mesh = this.nearestVertex.getProp('obj');
+      sphere.position.set(q.x, q.y, q.z);
+    }
+  }
+
+  /**
+   * 座標pが辺edge上に存在するか
+   * @param {MG.Edge} e
+   * @param {THREE.Vector3} p
+   * @return {boolean}
+   */
+  public isPositionOnEdge(e:MG.Edge, p:THREE.Vector3) {
+    const p1 = (e.getNode1().getProp('vec') as THREE.Vector3).clone();
+    const p2 = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
+    const v1 = p.clone().sub(p1);
+    const v2 = p2.clone().sub(p1);
+    // v1とv2が平行ならば v1・v2 == |v1||v2|
+    const x = v1.clone().dot(v2);
+    const y = v1.length() * v2.length();
+    // 平行かつ v1.length() <= v2.length()ならば，v1はv2の線上に存在する
+    if ((Math.abs(x - y) < 1e-8) && (v1.length() <= v2.length())) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
