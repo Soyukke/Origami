@@ -37,6 +37,16 @@ class View {
         (ev:MouseEvent) => this.onMouseMoveThis(this, ev),
     );
 
+    /**
+     * ノードクリック時の動作
+     * 1つめノード選択 -> 追加予定リストに追加
+     * 2つめノード選択 -> 追加予定リストに追加し，グラフにノードとエッジを追加する
+     */
+    this.canvas.addEventListener(
+        'click',
+        (ev:MouseEvent) => this.onClickEdge(this, ev),
+    );
+
     // rendererは
     this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -142,6 +152,18 @@ class View {
   }
 
   /**
+   * 辺クリック時の動作
+   * 参考
+   * https://ics.media/tutorial-three/raycast/
+   * @param {View} self
+   * @param {MouseEvent} ev
+   */
+  private onClickEdge(self:View, ev:MouseEvent) {
+    this.g.addNearestVertexToBuffer();
+  }
+
+
+  /**
    * windowのcanvas座標からWebGL座標(見えている領域)への変換
    * https://qiita.com/watabo_shi/items/0811d03390c18e46be86
    * @param {THREE.Vector3} windowPosition
@@ -216,6 +238,9 @@ class OrigamiGraph extends MG.MetaGraph {
   public scene:THREE.Scene;
   private nearestEdge_:MG.Edge|undefined;
   private nearestVertex:MG.Vertex;
+  // 追加予定の頂点
+  private verteciesBuffer:MG.Vertex[] = [];
+
   /**
    * 初期化
    * @param {THREE.Scene} scene
@@ -225,15 +250,24 @@ class OrigamiGraph extends MG.MetaGraph {
     this.scene = scene;
 
     // 最も近い距離の辺上の点
-    this.nearestVertex = new MG.Vertex();
+    this.nearestVertex = this.addNewVertex();
+  }
+
+  /**
+   * 新しい頂点初期化し追加
+   * @return {MG.Vertex}
+   */
+  public addNewVertex() {
+    const vertex = new MG.Vertex();
     const geometry = new THREE.SphereGeometry(10, 16, 32);
     const material = new THREE.MeshBasicMaterial({color: 0xFF00FF});
     const sphere = new THREE.Mesh(geometry, material);
     const vec = new THREE.Vector3(-200, -200, -200);
     sphere.position.set(vec.x, vec.y, vec.z);
-    this.nearestVertex.setProp('vec', vec);
-    this.nearestVertex.setProp('obj', sphere);
+    vertex.setProp('vec', vec);
+    vertex.setProp('obj', sphere);
     this.scene.add(sphere);
+    return vertex;
   }
 
   /**
@@ -393,7 +427,7 @@ class OrigamiGraph extends MG.MetaGraph {
   }
 
   /**
-   * vertex
+   * マウスの座標と最も近い辺上の頂点の座標を更新する
    * @param {MG.Edge} edge
    * @param {THREE.Vector3} p
    */
@@ -405,6 +439,15 @@ class OrigamiGraph extends MG.MetaGraph {
       const sphere:THREE.Mesh = this.nearestVertex.getProp('obj');
       sphere.position.set(q.x, q.y, q.z);
     }
+  }
+
+  /**
+   * クリック時，辺上のオブジェクトをbufferへ追加する
+   * nearestVertexを初期化する
+   */
+  public addNearestVertexToBuffer() {
+    this.verteciesBuffer.push(this.nearestVertex);
+    this.nearestVertex = this.addNewVertex();
   }
 
   /**
