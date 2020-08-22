@@ -7,8 +7,8 @@ export {MetaGraph, Vertex, Edge, Dict};
  * 座標系は[0, 1]
  */
 class MetaGraph {
-  private vertices:Vertex[]
-  private edges:Edge[]
+  protected vertices:Vertex[]
+  protected edges:Edge[]
 
   /**
    * グラフ初期化

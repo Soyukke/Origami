@@ -1,6 +1,7 @@
 export {View};
 import * as THREE from 'three';
 import * as MG from './MetaGraphs';
+import * as Geometry from './Geometry';
 /**
  * 画面表示用のclass
  */
@@ -160,6 +161,28 @@ class View {
    */
   private onClickEdge(self:View, ev:MouseEvent) {
     this.g.addNearestVertexToBuffer();
+    // 2個バッファに存在するなら，それをつなぐエッジを追加してバッファをクリア
+    // また，2個の頂点のEdgeが等しい場合は追加しない: 同じ辺上に辺を追加しない
+    if (this.g.verteciesBuffer.length == 2) {
+      const isNotOnSameEdge =
+      this.g.verteciesBuffer[0].edge !== this.g.verteciesBuffer[1].edge;
+      // true;
+      if (isNotOnSameEdge) {
+        const v1 = this.g.verteciesBuffer[0].vertex;
+        const v2 = this.g.verteciesBuffer[1].vertex;
+        const newEdge = new MG.Edge(v1, v2);
+        this.g.addEdge(newEdge);
+        // バッファ配列はクリア
+        this.g.verteciesBuffer = [];
+      } else {
+        // さっき追加した頂点は取り除く
+        const v = this.g.verteciesBuffer.pop();
+        if (v instanceof PairEdgeVertex) {
+          this.scene.remove(v.vertex.getProp('obj'));
+        }
+      }
+    }
+    console.log('バッファ配列長: ', this.g.verteciesBuffer.length);
   }
 
 
@@ -231,15 +254,26 @@ class View {
   }
 }
 
+
+/**
+ * 型定義
+ */
+class PairEdgeVertex {
+  /**
+   * コンストラクタ
+   */
+  constructor(public vertex:MG.Vertex, public edge:MG.Edge) {}
+}
+
 /**
  * ノードを描画したりする機能をのせる
  */
 class OrigamiGraph extends MG.MetaGraph {
   public scene:THREE.Scene;
   private nearestEdge_:MG.Edge|undefined;
-  private nearestVertex:MG.Vertex;
+  private nearestVertex:PairEdgeVertex;
   // 追加予定の頂点
-  private verteciesBuffer:MG.Vertex[] = [];
+  public verteciesBuffer:PairEdgeVertex[] = [];
 
   /**
    * 初期化
@@ -267,7 +301,7 @@ class OrigamiGraph extends MG.MetaGraph {
     vertex.setProp('vec', vec);
     vertex.setProp('obj', sphere);
     this.scene.add(sphere);
-    return vertex;
+    return new PairEdgeVertex(vertex, this.edges[0]);
   }
 
   /**
@@ -428,6 +462,7 @@ class OrigamiGraph extends MG.MetaGraph {
 
   /**
    * マウスの座標と最も近い辺上の頂点の座標を更新する
+   * 頂点プロパティ: vec, objを更新する
    * @param {MG.Edge} edge
    * @param {THREE.Vector3} p
    */
@@ -436,8 +471,10 @@ class OrigamiGraph extends MG.MetaGraph {
     const q = this.getNearestVertex(edge, p);
     // 点qが辺edge上に存在するならば座標をqへ移動する
     if (this.isPositionOnEdge(edge, q)) {
-      const sphere:THREE.Mesh = this.nearestVertex.getProp('obj');
+      const sphere:THREE.Mesh = this.nearestVertex.vertex.getProp('obj');
       sphere.position.set(q.x, q.y, q.z);
+      this.nearestVertex.vertex.setProp('vec', q);
+      this.nearestVertex.edge = edge;
     }
   }
 
