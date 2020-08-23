@@ -2,6 +2,10 @@ export {View};
 import * as THREE from 'three';
 import * as MG from './MetaGraphs';
 import * as Geometry from './Geometry';
+
+// 操作モード
+type Mode = 'SelectEdge'|'AddVertex';
+
 /**
  * 画面表示用のclass
  */
@@ -18,6 +22,9 @@ class View {
   private debug = false;
   private light = new THREE.DirectionalLight(0xFFFFFF);
   private g:OrigamiGraph;
+  private mode:Mode = 'AddVertex';
+  private moveEvent:(ev:MouseEvent)=>any;
+  private addNodeEvent:(ev:MouseEvent)=>any;
 
   /**
    * コンストラクタ
@@ -33,9 +40,11 @@ class View {
     this.canvas = canvas;
     // this.canvas.addEventListener('mousemove', this.onMouseMove);
     // EventListenerに登録する関数のthisはViewインスタンスではないので，引数でViewインスタンスを与える
+
+    this.moveEvent = (ev:MouseEvent) => this.onMouseMoveThis(this, ev);
     this.canvas.addEventListener(
         'mousemove',
-        (ev:MouseEvent) => this.onMouseMoveThis(this, ev),
+        this.moveEvent,
     );
 
     /**
@@ -43,9 +52,11 @@ class View {
      * 1つめノード選択 -> 追加予定リストに追加
      * 2つめノード選択 -> 追加予定リストに追加し，グラフにノードとエッジを追加する
      */
+
+    this.addNodeEvent = (ev:MouseEvent) => this.onClickEdge(this, ev);
     this.canvas.addEventListener(
         'click',
-        (ev:MouseEvent) => this.onClickEdge(this, ev),
+        this.addNodeEvent,
     );
 
     // rendererは
@@ -128,10 +139,10 @@ class View {
     // z = カメラ座標におけるscene座標からz = 0におけるx, y座標を求める
     const vec = new THREE.Vector3(
         x1, y1, 0,
-    ).unproject(this.camera).sub(this.camera.position).normalize();
+    ).unproject(self.camera).sub(self.camera.position).normalize();
     console.log('mousePosition1: ', vec);
-    const distance = - this.camera.position.z / vec.z;
-    vec.multiplyScalar(distance).add(this.camera.position);
+    const distance = - self.camera.position.z / vec.z;
+    vec.multiplyScalar(distance).add(self.camera.position);
     console.log('mousePosition2: ', vec);
 
     self.mousePosition.x = vec.x;
@@ -259,6 +270,30 @@ class View {
         new THREE.Vector3(this.mousePosition.x, this.mousePosition.y, 0),
     );
     requestAnimationFrame(this.render.bind(this));
+  }
+
+  /**
+   * 辺選択モードへ変更
+   */
+  public selectEdgeMode() {
+    console.log('mode', '辺選択モード関数');
+    this.mode = 'SelectEdge';
+    this.canvas.removeEventListener(
+        'click',
+        this.addNodeEvent,
+    );
+  }
+
+  /**
+   * ノード追加モードへ変更
+   */
+  public addVertexMode() {
+    console.log('mode', '頂点選択モード関数');
+    this.mode = 'AddVertex';
+    this.canvas.addEventListener(
+        'click',
+        this.addNodeEvent,
+    );
   }
 
   /**

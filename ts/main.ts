@@ -3,6 +3,9 @@
 import {View} from './OrigamiView';
 import { BinaryTextureLoader } from 'three';
 
+
+let view:View;
+
 /**
  * json doc
  * @param {string} name: string hoge
@@ -20,7 +23,7 @@ sayHello(myName);
  * now
  */
 function addHeadOne(): void {
-  const view = new View();
+  view = new View();
   view.render();
   addButtonEvent();
 }
@@ -73,6 +76,13 @@ function onClickModeButton(ev:MouseEvent) {
     }
   }
   (ev.target as HTMLButtonElement).classList.add('selected');
+  const label = (ev.target as HTMLButtonElement).textContent;
+  console.log('main', 'label', label);
+  if (label === '辺追加') {
+    view.addVertexMode();
+  } else if (label === '辺選択') {
+    view.selectEdgeMode();
+  }
 }
 
 window.onload = () => addHeadOne();
