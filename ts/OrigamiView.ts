@@ -16,7 +16,7 @@ class View {
   private canvas:HTMLCanvasElement;
   private mousePosition: THREE.Vector2;
   private debug = false;
-  private light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+  private light = new THREE.DirectionalLight(0xFFFFFF);
   private g:OrigamiGraph;
 
   /**
@@ -50,12 +50,14 @@ class View {
 
     // rendererは
     this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    console.log(window.innerWidth, window.innerHeight);
-    document.body.appendChild(this.renderer.domElement);
+    const width = window.innerWidth*0.8;
+    const height = window.innerHeight*0.8;
+    this.renderer.setSize(width, height);
+    console.log('init', window.innerWidth, window.innerHeight);
+    console.log('init', canvas.width, canvas.height);
+    // document.body.appendChild(this.renderer.domElement);
 
     // 視野角
-    const height = window.innerHeight;
     // const width = window.innerWidth;
     const fov = 60;
     const theta = Math.PI * fov / 180;
@@ -63,10 +65,12 @@ class View {
     const d = (height / 2) / Math.tan(theta / 2);
 
     this.scene = new THREE.Scene();
-    this.geometry = new THREE.BoxGeometry(5, 5, 5);
-    this.material = new THREE.MeshBasicMaterial({color: 0x00FF00});
+    const A = 10
+    this.geometry = new THREE.BoxGeometry(A, A, A);
+    this.material = new THREE.MeshLambertMaterial({color: 0x00FF00});
     this.cube = new THREE.Mesh(this.geometry, this.material);
     this.scene.add(this.cube);
+    this.light.position.set(1000, 1000, 1000);
     this.scene.add(this.light);
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(60, aspect, 1, d*2);
@@ -90,7 +94,7 @@ class View {
     const e2 = new MG.Edge(n1, n3);
     const e3 = new MG.Edge(n2, n4);
     const e4 = new MG.Edge(n3, n4);
-    const L = 1000;
+    const L = 500;
     this.g.addVertex(n1, new THREE.Vector3(-L/2, -L/2, 0));
     this.g.addVertex(n2, new THREE.Vector3(-L/2, L/2, 0));
     this.g.addVertex(n3, new THREE.Vector3(L/2, -L/2, 0));
@@ -294,7 +298,7 @@ class OrigamiGraph extends MG.MetaGraph {
   public addNewVertex() {
     const vertex = new MG.Vertex();
     const geometry = new THREE.SphereGeometry(10, 16, 32);
-    const material = new THREE.MeshBasicMaterial({color: 0xFF00FF});
+    const material = new THREE.MeshLambertMaterial({color: 0xFF00FF});
     const sphere = new THREE.Mesh(geometry, material);
     const vec = new THREE.Vector3(-200, -200, -200);
     sphere.position.set(vec.x, vec.y, vec.z);
@@ -312,7 +316,7 @@ class OrigamiGraph extends MG.MetaGraph {
   public addVertex(v:MG.Vertex, vec?:THREE.Vector3) {
     super.addVertex(v);
     const geometry = new THREE.SphereGeometry(10, 16, 32);
-    const material = new THREE.MeshBasicMaterial({color: 0xFF0000});
+    const material = new THREE.MeshLambertMaterial({color: 0xFF0000});
     const sphere = new THREE.Mesh(geometry, material);
     if (typeof vec !== 'undefined') {
       sphere.position.set(vec.x, vec.y, vec.z);

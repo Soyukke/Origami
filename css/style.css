@@ -1,0 +1,17 @@
+body div button {
+    background-color: aquamarine;
+}
+
+body div button.selected {
+    background-color: plum;
+}
+
+.flex {
+    display: flex;
+    flex-direction: row;
+}
+
+.canvas {
+    justify-content: center;
+    flex-basis: 80%
+}

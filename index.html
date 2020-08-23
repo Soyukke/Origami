@@ -1,11 +1,27 @@
 <html>
   <head>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <script type="text/javascript" src="./dist/bundle.js"></script>
   </head>
   <body>
     <h1>折り紙</h1>
+    <!-- ボタン -->
     <div>
-      <canvas id="canvas"></canvas>
+      <button class="selected modeButton">辺追加</button>
+      <button class="modeButton">山折り</button>
+      <button class="modeButton">谷折り</button>
+    </div>
+    <div class="flex">
+      <!-- 描画 -->
+      <div class="canvas">
+        <canvas id="canvas"></canvas>
+      </div>
+      <!-- 情報 -->
+      <div class="info">
+        <p>辺</p>
+        <p>折り目</p>
+        <p>折り率</p>
+      </div>
     </div>
   </body>
 </html>
