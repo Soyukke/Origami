@@ -65,7 +65,7 @@ class View {
     const d = (height / 2) / Math.tan(theta / 2);
 
     this.scene = new THREE.Scene();
-    const A = 10
+    const A = 10;
     this.geometry = new THREE.BoxGeometry(A, A, A);
     this.material = new THREE.MeshLambertMaterial({color: 0x00FF00});
     this.cube = new THREE.Mesh(this.geometry, this.material);
@@ -118,12 +118,25 @@ class View {
     const y = ev.clientY - elm.offsetTop;
     const w = elm.offsetWidth;
     const h = elm.offsetHeight;
-    // this.mousePosition = new THREE.Vector2((x / w) * 2 - 1, (y / h) * 2 + 1);
-    self.mousePosition.x = (w/2)*((x / w) * 2 - 1);
-    self.mousePosition.y = (h/2)*(1 - (y / h) * 2);
+    // シーン座標系: [-1, 1]
+    const x1 =(x / w) * 2 - 1;
+    const y1=1 - (y / h) * 2;
+    // シーン座標系: [-w/2, w/2], [-h/2, h/2]
+    // self.mousePosition.x = (w/2)*x1;
+    // self.mousePosition.y = (h/2)*y1;
+
+    // z = カメラ座標におけるscene座標からz = 0におけるx, y座標を求める
     const vec = new THREE.Vector3(
-        self.mousePosition.x, self.mousePosition.y, 0,
-    );
+        x1, y1, 0,
+    ).unproject(this.camera).sub(this.camera.position).normalize();
+    console.log('mousePosition1: ', vec);
+    const distance = - this.camera.position.z / vec.z;
+    vec.multiplyScalar(distance).add(this.camera.position);
+    console.log('mousePosition2: ', vec);
+
+    self.mousePosition.x = vec.x;
+    self.mousePosition.y = vec.y;
+
     /**
      * WebGL座標
      * (-w/2, h/2) (w/2, h/2)
