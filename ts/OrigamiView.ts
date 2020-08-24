@@ -554,14 +554,21 @@ class OrigamiGraph extends MG.MetaGraph {
    * @param {MG.Edge} e
    */
   public colorEdges(e:MG.Edge) {
+    const red = new THREE.Color(0xFF0000);
+    const blue = new THREE.Color(0x0000FF);
     const edges = this.getEdges();
     edges.forEach(
         (edge) => {
           const line:THREE.Line = edge.getProp('obj');
           const isSelected:boolean = edge.getProp('selected');
           if (!isSelected) {
-            (line.material as THREE.LineBasicMaterial).color =
-            new THREE.Color(0xAAAAAA);
+            // 山折り→赤, 谷折り→青
+            const foldRate = edge.getProp('fold');
+            let color = new THREE.Color(0xAAAAAA);
+            if (foldRate !== 0) {
+              color = foldRate >= 0 ? red : blue;
+            }
+            (line.material as THREE.LineBasicMaterial).color = color;
             line.material.needsUpdate = true;
           } else {
             (line.material as THREE.LineBasicMaterial).color =
