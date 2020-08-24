@@ -25,6 +25,7 @@ class View {
   private mode:Mode = 'AddVertex';
   private moveEvent:(ev:MouseEvent)=>any;
   private addNodeEvent:(ev:MouseEvent)=>any;
+  private selectEdgeEvent:(ev:MouseEvent)=>any;
 
   /**
    * コンストラクタ
@@ -42,6 +43,10 @@ class View {
     // EventListenerに登録する関数のthisはViewインスタンスではないので，引数でViewインスタンスを与える
 
     this.moveEvent = (ev:MouseEvent) => this.onMouseMoveThis(this, ev);
+    this.addNodeEvent = (ev:MouseEvent) => this.onClickEdge(this, ev);
+    this.selectEdgeEvent =
+    (ev:MouseEvent) => this.onClickEdgeForSelect(this, ev);
+
     this.canvas.addEventListener(
         'mousemove',
         this.moveEvent,
@@ -53,7 +58,6 @@ class View {
      * 2つめノード選択 -> 追加予定リストに追加し，グラフにノードとエッジを追加する
      */
 
-    this.addNodeEvent = (ev:MouseEvent) => this.onClickEdge(this, ev);
     this.canvas.addEventListener(
         'click',
         this.addNodeEvent,
@@ -213,6 +217,22 @@ class View {
     console.log('バッファ配列長: ', this.g.verteciesBuffer.length);
   }
 
+  /**
+   * 辺選択モード時における辺クリック時の動作
+   * 参考
+   * https://ics.media/tutorial-three/raycast/
+   * @param {View} self
+   * @param {MouseEvent} ev
+   */
+  private onClickEdgeForSelect(self:View, ev:MouseEvent) {
+    // マウスから最も近いエッジ
+    const edge = this.g.nearestVertex.edge;
+    // edgeの情報を取り出してhtmlに表示
+    // すべてのedgeをselected = falseにする
+    this.g.getEdges().forEach((e) => e.setProp('selected', false));
+    // edgeの色を変更し，selected propにtrueをセットする
+    edge.setProp('selected', true);
+  }
 
   /**
    * windowのcanvas座標からWebGL座標(見えている領域)への変換
@@ -282,6 +302,10 @@ class View {
         'click',
         this.addNodeEvent,
     );
+    this.canvas.addEventListener(
+        'click',
+        this.selectEdgeEvent,
+    );
   }
 
   /**
@@ -290,6 +314,12 @@ class View {
   public addVertexMode() {
     console.log('mode', '頂点選択モード関数');
     this.mode = 'AddVertex';
+    this.canvas.removeEventListener(
+        'click',
+        this.selectEdgeEvent,
+    );
+    // 辺選択をすべてfalseにする
+    this.g.getEdges().forEach((e) => e.setProp('selected', false));
     this.canvas.addEventListener(
         'click',
         this.addNodeEvent,
@@ -323,7 +353,7 @@ class PairEdgeVertex {
 class OrigamiGraph extends MG.MetaGraph {
   public scene:THREE.Scene;
   private nearestEdge_:MG.Edge|undefined;
-  private nearestVertex:PairEdgeVertex;
+  public nearestVertex:PairEdgeVertex;
   // 追加予定の頂点
   public verteciesBuffer:PairEdgeVertex[] = [];
 
@@ -401,6 +431,7 @@ class OrigamiGraph extends MG.MetaGraph {
     this.scene.add(line);
     // lineオブジェクトをエッジの情報として埋め込む
     e.setProp('obj', line);
+    e.setProp('selected', false);
   }
 
   /**
@@ -490,9 +521,16 @@ class OrigamiGraph extends MG.MetaGraph {
     edges.forEach(
         (edge) => {
           const line:THREE.Line = edge.getProp('obj');
-          (line.material as THREE.LineBasicMaterial).color =
-          new THREE.Color(0xAAAAAA);
-          line.material.needsUpdate = true;
+          const isSelected:boolean = edge.getProp('selected');
+          if (!isSelected) {
+            (line.material as THREE.LineBasicMaterial).color =
+            new THREE.Color(0xAAAAAA);
+            line.material.needsUpdate = true;
+          } else {
+            (line.material as THREE.LineBasicMaterial).color =
+            new THREE.Color(0xFFF100);
+            line.material.needsUpdate = true;
+          }
         },
     );
     const line:THREE.Line = e.getProp('obj');
