@@ -26,6 +26,7 @@ class View {
   private moveEvent:(ev:MouseEvent)=>any;
   private addNodeEvent:(ev:MouseEvent)=>any;
   private selectEdgeEvent:(ev:MouseEvent)=>any;
+  private changeFoldRateEvent:(ev:Event)=>any;
 
   /**
    * コンストラクタ
@@ -46,6 +47,12 @@ class View {
     this.addNodeEvent = (ev:MouseEvent) => this.onClickEdge(this, ev);
     this.selectEdgeEvent =
     (ev:MouseEvent) => this.onClickEdgeForSelect(this, ev);
+    this.changeFoldRateEvent =
+    (ev:Event) => this.onChangeFoldRate(this, ev);
+
+
+    const foldRateElement = document.getElementById('foldRate');
+    foldRateElement?.addEventListener('change', this.changeFoldRateEvent);
 
     this.canvas.addEventListener(
         'mousemove',
@@ -232,6 +239,34 @@ class View {
     this.g.getEdges().forEach((e) => e.setProp('selected', false));
     // edgeの色を変更し，selected propにtrueをセットする
     edge.setProp('selected', true);
+    // 情報表示element
+    const foldMode = (edge.getProp('fold') as number);
+    const foldModeElement = document.getElementById('foldMode');
+    if (foldModeElement instanceof HTMLElement) {
+      foldModeElement.textContent = foldMode >= 0 ? '山折り' : '谷折り';
+    }
+    // inputタグ
+    const foldRateElement = document.getElementById('foldRate');
+    if (foldRateElement instanceof HTMLElement) {
+      (foldRateElement as HTMLInputElement).value = foldMode.toString();
+    }
+  }
+
+  /**
+   * 辺選択モード時: 折り率を入力して設定したときの動作
+   * 参考
+   * https://ics.media/tutorial-three/raycast/
+   * @param {View} self
+   * @param {Event} ev
+   */
+  private onChangeFoldRate(self:View, ev:Event) {
+    // 選択されているEdge
+    const edge = this.g.getEdges().find((e) => e.getProp('selected') === true);
+    const foldRateElement = document.getElementById('foldRate');
+    if (foldRateElement instanceof HTMLElement) {
+      const value = (foldRateElement as HTMLInputElement).value;
+      edge?.setProp('fold', value);
+    }
   }
 
   /**
@@ -431,7 +466,9 @@ class OrigamiGraph extends MG.MetaGraph {
     this.scene.add(line);
     // lineオブジェクトをエッジの情報として埋め込む
     e.setProp('obj', line);
-    e.setProp('selected', false);
+    e.setProp('selected', false); // 辺が選択されているか
+    // 辺の折り [-180, 180]
+    e.setProp('fold', 0);
   }
 
   /**
