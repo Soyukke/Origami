@@ -361,6 +361,49 @@ class View {
     );
   }
 
+
+  /**
+   * 折る: 雑
+   * 1. 辺esを列挙
+   * 2. 辺eを選択
+   * 3. 辺eより左側の点vsを列挙
+   * 4. 点vをvsから選択
+   * 5. 点vを辺eに関して回転させる
+   */
+  public foldingZatsu() {
+    const es = this.g.getEdges();
+    es.forEach(e => {
+      // 対象の中心オブジェクト
+      const line = e.getProp('obj');
+      const v1 = e.getNode1().getProp('obj');
+      const v2 = e.getNode2().getProp('obj');
+      const rate = e.getProp('fold');
+      // 辺より左側にあるノードを抽出
+      // v1 -> v2のベクトルとv1 -> vのベクトルのなす角で判断する
+      // また，v1.z < v2.zであることを前提とする
+    });
+
+    // 折り率
+    const foldRate =
+    (document.getElementById('doFoldRate') as HTMLInputElement).value;
+    // 回転行列
+    const R = new THREE.Matrix3();
+  }
+
+  /**
+   * ロドリゲスの回転
+   */
+
+  /**
+   * 回転する
+   */
+  public rotate() {
+    const rotateRate =
+    (document.getElementById('rotateRate') as HTMLInputElement).value;
+  }
+
+
+
   /**
    * @param {any[]} data
    */
