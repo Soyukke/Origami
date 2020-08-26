@@ -21,7 +21,7 @@ class View {
   private mousePosition: THREE.Vector2;
   private debug = false;
   private light = new THREE.DirectionalLight(0xFFFFFF);
-  private g:OrigamiGraph;
+  public g:OrigamiGraph;
   private mode:Mode = 'AddVertex';
   private moveEvent:(ev:MouseEvent)=>any;
   private addNodeEvent:(ev:MouseEvent)=>any;
@@ -369,25 +369,61 @@ class View {
    * 3. 辺eより左側の点vsを列挙
    * 4. 点vをvsから選択
    * 5. 点vを辺eに関して回転させる
+   * @param {OrigamiGraphG} g
    */
-  public foldingZatsu() {
-    const es = this.g.getEdges();
-    es.forEach(e => {
+  public foldingZatsu(g:OrigamiGraph) {
+    console.log('foldingZatsu');
+    const rate =
+    Number(
+        (document.getElementById('doFoldRate') as HTMLInputElement).value,
+    );
+    const es = g.getEdges();
+
+    const es2 = es.filter((e) => {
+      const theta = e.getProp('fold');
+      return theta !== 0;
+    });
+    console.log('foldingZatsu', '回転対象辺数:', es2.length);
+    es2.forEach((e) => {
       // 対象の中心オブジェクト
-      const line = e.getProp('obj');
-      const v1 = e.getNode1().getProp('obj');
-      const v2 = e.getNode2().getProp('obj');
-      const rate = e.getProp('fold');
+      // const line = e.getProp('obj');
+      const v1_ = (e.getNode1().getProp('vec') as THREE.Vector3).clone();
+      const v2_ = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
+      const theta = e.getProp('fold');
       // 辺より左側にあるノードを抽出
       // v1 -> v2のベクトルとv1 -> vのベクトルのなす角で判断する
       // また，v1.z < v2.zであることを前提とする
+      const v1 = (v1_.z < v2_.z) ? v1_ : v2_;
+      const v2 = (v1_.z < v2_.z) ? v2_ : v1_;
+      const vec1 = v2.clone().sub(v1);
+      const vs = g.getVertices();
+      // 回転対象の頂点リスト
+      const targets = vs.filter(
+          (v) => {
+            const vec2 = (v.getProp('vec') as THREE.Vector3).clone().sub(v1);
+            // vec1 × vec2の外積の符号を求める
+            const isLeft = vec1.clone().cross(vec2).z > 0;
+            // 符号が正ならばvs[i]は左側に存在するので回転の対象とする
+            return isLeft;
+          },
+      );
+      // 回転対象を回転する
+      console.log('foldingZatsu', '回転対象数:', targets.length);
+      console.log('foldingZatsu', '回転(%):', theta);
+      targets.forEach(
+          (v) => {
+            const vRotated = this.rotate(e, v, theta*(Math.PI/180)*(rate/100));
+            const obj = (v.getProp('obj') as THREE.Mesh);
+            obj.position.set(vRotated.x, vRotated.y, vRotated.z);
+          },
+      );
     });
 
     // 折り率
-    const foldRate =
-    (document.getElementById('doFoldRate') as HTMLInputElement).value;
+    // const foldRate =
+    // (document.getElementById('doFoldRate') as HTMLInputElement).value;
     // 回転行列
-    const R = new THREE.Matrix3();
+    // const R = new THREE.Matrix3();
   }
 
   /**
@@ -395,14 +431,44 @@ class View {
    */
 
   /**
-   * 回転する
+   * ロドリゲスの回転公式で点を回転する
+   * 1. vの座標を辺からの相対座標v - v1とする
+   * 2. 相対座標をロドリゲスの回転公式で回転する
+   * 3. 回転後の座標 + v1を計算する
+   * @param {MG.Edge} e
+   * @param {MG.Vertex} vertex
+   * @param {number} theta
+   * @return {THREE.Vector3}
    */
-  public rotate() {
-    const rotateRate =
-    (document.getElementById('rotateRate') as HTMLInputElement).value;
+  public rotate(e:MG.Edge, vertex:MG.Vertex, theta:number) {
+    const v = (vertex.getProp('vec') as THREE.Vector3).clone();
+    const v1_ = (e.getNode1().getProp('vec') as THREE.Vector3);
+    const v2_ = (e.getNode2().getProp('vec') as THREE.Vector3);
+    const v1 = (v1_.z < v2_.z) ? v1_ : v2_;
+    const v2 = (v1_.z < v2_.z) ? v2_ : v1_;
+    // 回転中心の単位ベクトル
+    const vb = v2.clone().sub(v1).normalize();
+    const n1 = vb.x;
+    const n2 = vb.y;
+    const n3 = vb.z;
+    const cos = Math.cos(theta);
+    const sin = Math.sin(theta);
+    const R = new THREE.Matrix3();
+    // 回転行列
+    R.set(
+        (n1**2)*(1-cos) + cos,
+        (n1*n2)*(1-cos) - n3*sin,
+        (n1*n3)*(1-cos) + n2*sin,
+        (n1*n2)*(1-cos) + n3*sin,
+        (n2**2)*(1-cos) + cos,
+        (n2*n3)*(1-cos) - n1*sin,
+        (n1*n3)*(1-cos) - n2*sin,
+        (n2*n3)*(1-cos) + n1*sin,
+        (n3**2)*(1-cos) + cos,
+    );
+    const vRotated = v.clone().sub(v1).applyMatrix3(R).add(v1);
+    return vRotated;
   }
-
-
 
   /**
    * @param {any[]} data

@@ -26,6 +26,15 @@ function addHeadOne(): void {
   view = new View();
   view.render();
   addButtonEvent();
+
+
+  const elm = document.getElementById('doFoldRate');
+  if (elm instanceof HTMLElement) {
+    elm.addEventListener(
+        'change',
+        ()=>view.foldingZatsu(view.g),
+    );
+  }
 }
 
 /**
