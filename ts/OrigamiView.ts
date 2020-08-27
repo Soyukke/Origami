@@ -417,6 +417,8 @@ class View {
             obj.position.set(vRotated.x, vRotated.y, vRotated.z);
           },
       );
+      // 辺の描画頂点を更新する
+      g.updateLine();
     });
 
     // 折り率
@@ -750,5 +752,35 @@ class OrigamiGraph extends MG.MetaGraph {
     } else {
       return false;
     }
+  }
+
+  /**
+   * 辺の座標を更新する
+   */
+  public updateLine() {
+    const edges = this.edges;
+    edges.forEach(
+        (edge) => {
+          const v1 =
+          (edge.getNode1().getProp('obj') as THREE.Mesh).position.clone();
+          const v2 =
+          (edge.getNode2().getProp('obj') as THREE.Mesh).position.clone();
+          const positions = new Float32Array(
+              [
+                v1.x, v1.y, v1.z,
+                v2.x, v2.y, v2.z,
+              ],
+          );
+
+          const line = (edge.getProp('obj') as THREE.Line);
+          const geometry = (line.geometry as THREE.BufferGeometry);
+          geometry.addAttribute(
+              'position',
+              new THREE.Float32BufferAttribute(positions, 3),
+          );
+          // this.scene.remove(line);
+          // 更新された座標を取得
+        },
+    );
   }
 }
