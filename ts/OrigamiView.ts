@@ -207,10 +207,14 @@ class View {
       this.g.verteciesBuffer[0].edge !== this.g.verteciesBuffer[1].edge;
       // true;
       if (isNotOnSameEdge) {
+        // 頂点と辺を追加
         const v1 = this.g.verteciesBuffer[0].vertex;
         const v2 = this.g.verteciesBuffer[1].vertex;
         const newEdge = new MG.Edge(v1, v2);
         this.g.addEdge(newEdge);
+        // 辺を分割する
+        this.splitEdge(this.g.verteciesBuffer[0]);
+        this.splitEdge(this.g.verteciesBuffer[1]);
         // バッファ配列はクリア
         this.g.verteciesBuffer = [];
       } else {
@@ -222,6 +226,27 @@ class View {
       }
     }
     console.log('バッファ配列長: ', this.g.verteciesBuffer.length);
+  }
+
+  /**
+   * 辺を分割する
+   * @param {PairEdgeVertex} pev
+   */
+  private splitEdge(pev:PairEdgeVertex) {
+    const edge = pev.edge;
+    const v3 = pev.vertex;
+    const v1 = edge.getNode1();
+    const v2 = edge.getNode2();
+    // edgeを削除し，分割したedgeを新しく追加する
+    const line = (edge.getProp('obj') as THREE.Line);
+    // sceneから消すlineを削除
+    this.scene.remove(line);
+    const edgeA = new MG.Edge(v1, v3);
+    const edgeB = new MG.Edge(v2, v3);
+    // 分割した辺を追加する
+    this.g.addEdge(edgeA);
+    this.g.addEdge(edgeB);
+    this.g.removeEdge(edge);
   }
 
   /**

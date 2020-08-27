@@ -66,6 +66,17 @@ class MetaGraph {
   public addEdges(...es:Edge[]) {
     this.edges.push(...es);
   }
+
+  /**
+   * 頂点削除
+   * @param {Edge} e
+   */
+  public removeEdge(e:Edge) {
+    // 対象の頂点だけ省く
+    console.log('removeEdge', 'length before', this.edges.length);
+    this.edges = this.edges.filter((x) => x!==e);
+    console.log('removeEdge', 'length after', this.edges.length);
+  }
 }
 
 /**
