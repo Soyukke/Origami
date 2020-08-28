@@ -667,22 +667,29 @@ class OrigamiGraph extends MG.MetaGraph {
 
   /**
    * すべてのエッジと点を比較し，最も点と近いエッジを求める
+   * 距離じゃない
+   * 点が辺上に存在するかつ，距離が最小なEdgeを探索する
    * @param {THREE.Vector3} p
    * @return {Edge}
    */
   public nearestEdge(p:THREE.Vector3) {
     const edges = this.getEdges();
     console.log('nearestEdge: ', edges);
-    const distances = edges.map<number>(
+    // 辺上に存在するedgeを絞る
+    const edges2 = edges.filter((e) => {
+      // 辺の直線と交わる点
+      const q = this.getNearestVertex(e, p);
+      // qが辺上に存在する
+      return this.isPositionOnEdge(e, q);
+    });
+    // その中で距離が最小のedgeをもとめる
+    const distances = edges2.map<number>(
         (edge) => {
           return this.distance(edge, p);
         },
     );
-    console.log('distances: ', distances);
     const idx = distances.indexOf(Math.min(...distances));
-    console.log('idx: ', idx);
-    this.nearestEdge_ = edges[idx];
-    return edges[idx];
+    return edges2[idx];
   }
 
   /**
@@ -725,9 +732,10 @@ class OrigamiGraph extends MG.MetaGraph {
    */
   public updateEdgeColor(p:THREE.Vector3) {
     const edge = this.nearestEdge(p);
-    this.updateVertexOnNearestEdge(edge, p);
-    console.log('updateEdgeColor: ', edge);
-    this.colorEdges(edge);
+    if (edge instanceof MG.Edge) {
+      this.updateVertexOnNearestEdge(edge, p);
+      this.colorEdges(this.nearestVertex.edge);
+    }
   }
 
   /**
@@ -737,15 +745,11 @@ class OrigamiGraph extends MG.MetaGraph {
    * @param {THREE.Vector3} p
    */
   public updateVertexOnNearestEdge(edge:MG.Edge, p:THREE.Vector3) {
-    // 辺上に垂直におろした点の座標
     const q = this.getNearestVertex(edge, p);
-    // 点qが辺edge上に存在するならば座標をqへ移動する
-    if (this.isPositionOnEdge(edge, q)) {
-      const sphere:THREE.Mesh = this.nearestVertex.vertex.getProp('obj');
-      sphere.position.set(q.x, q.y, q.z);
-      this.nearestVertex.vertex.setProp('vec', q);
-      this.nearestVertex.edge = edge;
-    }
+    const sphere:THREE.Mesh = this.nearestVertex.vertex.getProp('obj');
+    sphere.position.set(q.x, q.y, q.z);
+    this.nearestVertex.vertex.setProp('vec', q);
+    this.nearestVertex.edge = edge;
   }
 
   /**
