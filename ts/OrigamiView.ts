@@ -291,7 +291,10 @@ class View {
     const edge = this.g.getEdges().find((e) => e.getProp('selected') === true);
     const foldRateElement = document.getElementById('foldRate');
     if (foldRateElement instanceof HTMLElement) {
-      const value = (foldRateElement as HTMLInputElement).value;
+      // integerで保持する
+      const value = Number.parseInt(
+          (foldRateElement as HTMLInputElement).value,
+      );
       edge?.setProp('fold', value);
     }
   }
@@ -413,24 +416,34 @@ class View {
     console.log('foldingZatsu', '回転対象辺数:', es2.length);
     // 辺一つ一つについて折り処理を行う
     es2.forEach((e) => {
-      // 対象の中心オブジェクト
-      // const line = e.getProp('obj');
+      // 辺の2頂点を取得する
       const v1_ = (e.getNode1().getProp('vec') as THREE.Vector3).clone();
       const v2_ = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
       const theta = e.getProp('fold');
       // 辺より左側にあるノードを抽出
       // v1 -> v2のベクトルとv1 -> vのベクトルのなす角で判断する
-      // また，v1.z < v2.zであることを前提とする
-      const v1 = (v1_.z < v2_.z) ? v1_ : v2_;
-      const v2 = (v1_.z < v2_.z) ? v2_ : v1_;
+      // また，v1.y < v2.yであることを前提とする
+      const v1 = (v1_.y < v2_.y) ? v1_ : v2_;
+      const v2 = (v1_.y < v2_.y) ? v2_ : v1_;
       const vec1 = v2.clone().sub(v1);
+      // 全頂点を取得する
       const vs = g.getVertices();
       // 回転対象の頂点リスト
+      // 辺に分断された2領域のうち，一方にある点をすべて取得する
       const targets = vs.filter(
           (v) => {
-            const vec2 = (v.getProp('vec') as THREE.Vector3).clone().sub(v1);
-            // vec1 × vec2の外積の符号を求める
-            const isLeft = vec1.clone().cross(vec2).z > 0;
+            let vec2:THREE.Vector3;
+            // vtmpに値があればそれを使う
+            const temp = (v.getProp('vtmp') as THREE.Vector3);
+            console.log('foldingZatsu', 'vtmp', temp);
+            if (typeof temp === 'undefined') {
+              vec2 = (v.getProp('vec') as THREE.Vector3).clone().sub(v1);
+            } else {
+              console.log('foldingZatsu', 'vtmp', 'defined', temp);
+              vec2 = temp.clone().sub(v1);
+            }
+            // vec1 × vec2の外積の符号を求める. 0も含む(点が辺の真下にある場合も含む)
+            const isLeft = vec1.clone().cross(vec2).z >= 0;
             // 符号が正ならばvs[i]は左側に存在するので回転の対象とする
             return isLeft;
           },
@@ -442,11 +455,18 @@ class View {
           (v) => {
             const vRotated = this.rotate(e, v, theta*(Math.PI/180)*(rate/100));
             const obj = (v.getProp('obj') as THREE.Mesh);
+            // 座標をvertexにセットしておく TODO
             obj.position.set(vRotated.x, vRotated.y, vRotated.z);
+            // vtmp をセットする
+            v.setProp('vtmp', vRotated);
           },
       );
       // 辺の描画頂点を更新する
       g.updateLine();
+    });
+    // vtmpをリセットする
+    this.g.getVertices().forEach((v)=>{
+      v.setProp('vtmp', undefined);
     });
   }
 
@@ -465,11 +485,19 @@ class View {
    * @return {THREE.Vector3}
    */
   public rotate(e:MG.Edge, vertex:MG.Vertex, theta:number) {
-    const v = (vertex.getProp('vec') as THREE.Vector3).clone();
+    let v:THREE.Vector3;
+    // vtmpに値があればそれを使う
+    const temp = (vertex.getProp('vtmp') as THREE.Vector3);
+    if (typeof temp === 'undefined') {
+      v = (vertex.getProp('vec') as THREE.Vector3).clone();
+    } else {
+      v = temp.clone();
+    }
+    // const v = (vertex.getProp('vec') as THREE.Vector3).clone();
     const v1_ = (e.getNode1().getProp('vec') as THREE.Vector3);
     const v2_ = (e.getNode2().getProp('vec') as THREE.Vector3);
-    const v1 = (v1_.z < v2_.z) ? v1_ : v2_;
-    const v2 = (v1_.z < v2_.z) ? v2_ : v1_;
+    const v1 = (v1_.y < v2_.y) ? v1_ : v2_;
+    const v2 = (v1_.y < v2_.y) ? v2_ : v1_;
     // 回転中心の単位ベクトル
     const vb = v2.clone().sub(v1).normalize();
     const n1 = vb.x;
