@@ -207,11 +207,13 @@ class View {
       this.g.verteciesBuffer[0].edge !== this.g.verteciesBuffer[1].edge;
       // true;
       if (isNotOnSameEdge) {
-        // 頂点と辺を追加
         const v1 = this.g.verteciesBuffer[0].vertex;
         const v2 = this.g.verteciesBuffer[1].vertex;
         const newEdge = new MG.Edge(v1, v2);
+        // 頂点と辺をグラフに追加
         this.g.addEdge(newEdge);
+        this.g.addVertex(v1);
+        this.g.addVertex(v2);
         // 辺を分割する
         this.splitEdge(this.g.verteciesBuffer[0]);
         this.splitEdge(this.g.verteciesBuffer[1]);
@@ -403,12 +405,13 @@ class View {
         (document.getElementById('doFoldRate') as HTMLInputElement).value,
     );
     const es = g.getEdges();
-
+    // 折りが設定されている辺を取り出す
     const es2 = es.filter((e) => {
       const theta = e.getProp('fold');
       return theta !== 0;
     });
     console.log('foldingZatsu', '回転対象辺数:', es2.length);
+    // 辺一つ一つについて折り処理を行う
     es2.forEach((e) => {
       // 対象の中心オブジェクト
       // const line = e.getProp('obj');
@@ -445,12 +448,6 @@ class View {
       // 辺の描画頂点を更新する
       g.updateLine();
     });
-
-    // 折り率
-    // const foldRate =
-    // (document.getElementById('doFoldRate') as HTMLInputElement).value;
-    // 回転行列
-    // const R = new THREE.Matrix3();
   }
 
   /**

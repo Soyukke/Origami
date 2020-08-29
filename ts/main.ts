@@ -27,11 +27,11 @@ function addHeadOne(): void {
   view.render();
   addButtonEvent();
 
-
+  // スライダーで折る
   const elm = document.getElementById('doFoldRate');
   if (elm instanceof HTMLElement) {
     elm.addEventListener(
-        'change',
+        'input',
         ()=>view.foldingZatsu(view.g),
     );
   }
