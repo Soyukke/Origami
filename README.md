@@ -2,15 +2,10 @@
 
 https://soyukke.github.io/Origami/index.html
 
-## 初期設定
-
-https://hiranoon.hatenablog.com/entry/2020/04/13/192746
-
-## Three.js
-
-https://qiita.com/siouxcitizen/items/32198325644496d52716
+![](./img/example1.gif)
 
 
+## メモ
 three.jsのインストール
 ```shell
 $ npm install three

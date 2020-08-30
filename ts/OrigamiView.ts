@@ -442,8 +442,13 @@ class View {
               console.log('foldingZatsu', 'vtmp', 'defined', temp);
               vec2 = temp.clone().sub(v1);
             }
-            // vec1 × vec2の外積の符号を求める. 0も含む(点が辺の真下にある場合も含む)
-            const isLeft = vec1.clone().cross(vec2).z >= 0;
+            // vec1 × vec2の外積の符号を求める
+            // 外積のベクトルが左側の領域を向いていたら対象とする
+            // const isLeft = vec1.clone().cross(vec2).z >= 0;
+            const vec3 = vec1.clone().cross(vec2);
+            const isLeft =
+            vec3.x < 0 ||
+            (vec3.x == 0 && vec3.z > 0);
             // 符号が正ならばvs[i]は左側に存在するので回転の対象とする
             return isLeft;
           },
