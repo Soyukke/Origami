@@ -432,6 +432,11 @@ class View {
       // 辺に分断された2領域のうち，一方にある点をすべて取得する
       const targets = vs.filter(
           (v) => {
+            // isTargetの場合，それは対象である
+            const isTarget = (v.getProp('isTarget') as Boolean);
+            if (isTarget) {
+              return true;
+            }
             let vec2:THREE.Vector3;
             // vtmpに値があればそれを使う
             const temp = (v.getProp('vtmp') as THREE.Vector3);
@@ -443,13 +448,13 @@ class View {
               vec2 = temp.clone().sub(v1);
             }
             // vec1 × vec2の外積の符号を求める
-            // 外積のベクトルが左側の領域を向いていたら対象とする
             // const isLeft = vec1.clone().cross(vec2).z >= 0;
             const vec3 = vec1.clone().cross(vec2);
-            const isLeft =
-            vec3.x < 0 ||
-            (vec3.x == 0 && vec3.z > 0);
+            const isLeft = vec3.z > 0;
             // 符号が正ならばvs[i]は左側に存在するので回転の対象とする
+            if (isLeft) {
+              v.setProp('isTarget', true);
+            }
             return isLeft;
           },
       );
@@ -470,8 +475,10 @@ class View {
       g.updateLine();
     });
     // vtmpをリセットする
+    // isTargetをリセットする
     this.g.getVertices().forEach((v)=>{
       v.setProp('vtmp', undefined);
+      v.setProp('isTarget', undefined);
     });
   }
 
