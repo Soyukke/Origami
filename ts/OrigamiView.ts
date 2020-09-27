@@ -749,18 +749,18 @@ class OrigamiGraph extends MG.MetaGraph {
               color = foldRate >= 0 ? red : blue;
             }
             (line.material as THREE.LineBasicMaterial).color = color;
-            line.material.needsUpdate = true;
+            (line.material as THREE.Material).needsUpdate = true;
           } else {
             (line.material as THREE.LineBasicMaterial).color =
             new THREE.Color(0xFFF100);
-            line.material.needsUpdate = true;
+            (line.material as THREE.Material).needsUpdate = true;
           }
         },
     );
     const line:THREE.Line = e.getProp('obj');
     (line.material as THREE.LineBasicMaterial).color =
     new THREE.Color(0x00FF00);
-    line.material.needsUpdate = true;
+    (line.material as THREE.Material).needsUpdate = true;
   }
 
   /**

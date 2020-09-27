@@ -1,8 +1,6 @@
 // js/main.ts
 // TypeScriptの型指定を入れた
 import {View} from './OrigamiView';
-import { BinaryTextureLoader } from 'three';
-
 
 let view:View;
 

@@ -4,6 +4,19 @@ https://soyukke.github.io/Origami/index.html
 
 ![](./img/example1.gif)
 
+## 開発
+
+### 準備
+```sh
+cd Origami
+npm install
+```
+
+### webpack
+
+```sh
+npm run webpack 
+```
 
 ## メモ
 three.jsのインストール
