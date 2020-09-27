@@ -53,6 +53,20 @@ function addButtonEvent() {
       );
     }
   }
+
+  // 対称点選択
+  const elms2 = body.getElementsByClassName('symmetricButton');
+  for (let i=0; i<elms2.length; i++) {
+    const btn = elms2.item(i);
+    console.log('main', 'ボタンにaddEventListener');
+    if (btn instanceof HTMLButtonElement) {
+      btn.addEventListener(
+          'click',
+          (ev:MouseEvent) => onClickSymmetricButton(ev),
+      );
+    }
+  }
+
 }
 
 /**
@@ -89,6 +103,35 @@ function onClickModeButton(ev:MouseEvent) {
     view.addVertexMode();
   } else if (label === '辺選択') {
     view.selectEdgeMode();
+  }
+}
+
+/**
+ * Symmetricボタン押下時の処理
+ * - 押されたボタンのclassを操作する
+ * - OrigamiViewのモードを変更する
+ * @param {MouseEvent} ev
+ */
+function onClickSymmetricButton(ev:MouseEvent) {
+  const body = document.body;
+  const elms = body.getElementsByClassName('symmetricButton');
+  for (let i=0; i<elms.length; i++) {
+    const btn = elms.item(i);
+    if (btn instanceof HTMLButtonElement) {
+      btn.classList.remove('selected');
+    }
+  }
+  (ev.target as HTMLButtonElement).classList.add('selected');
+  const label = (ev.target as HTMLButtonElement).textContent;
+  console.log('main', 'label', label);
+  if (label === 'none') {
+    view.setSymmetricMode(undefined);
+  } else if (label === '1/2') {
+    view.setSymmetricMode(1/2);
+  } else if (label === '1/3') {
+    view.setSymmetricMode(1/3);
+  } else if (label === '1/4') {
+    view.setSymmetricMode(1/4);
   }
 }
 

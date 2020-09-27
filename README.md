@@ -43,34 +43,6 @@ npm install --save-dev webpack
 npm install webpack-cli --save-dev
 ```
 
-## TODO
-
-## 初期表示
-.---.
-|   |
-.---.
-
-### 処理
-- クリックでノード追加
-
-### 表示
-- ノードは球で表示．
-- ガイドを表示する
-
-
-## グラフ
-
-### ノード
-
-ノードが持つ情報
-- 座標(x, y) 不要？
-- ジオメトリ
-
-
-### エッジ
-
-- ノード1, ノード2
-
 ### グラフ描画
 
 * [x] ノード追加時，ノードをsceneに追加
@@ -89,7 +61,7 @@ npm install webpack-cli --save-dev
 
 ### 折り目の定義
 
-* [ ] エッジに山折り, 谷折り, 折り%[0, 100]つまり[0, π]情報を設定する
+* [x] エッジに山折り, 谷折り, 折り%[0, 100]つまり[0, π]情報を設定する
 
 ### 折る
 
@@ -97,7 +69,7 @@ npm install webpack-cli --save-dev
 
 ## 表示
 
-* [ ] 辺を選択し，辺の情報を表示・編集できるようにする
+* [x] 辺を選択し，辺の情報を表示・編集できるようにする
 
 ## ファイル出力
 
@@ -107,31 +79,3 @@ npm install webpack-cli --save-dev
 ## ファイル入力
 
 * [ ] 折り紙ファイルload
-
-
-### エッジと点Pの距離
-$\vec v_{ij}$はエッジをつなぐ頂点$j$から$i$へ向かうベクトル
-頂点$j$から点pへ向かうベクトルを$\vec p$
-$$
-|\vec e_{i,j}||\vec p|\cos \theta = \vec e_{i, j} \cdot \vec p
-$$
-
-$$
-\cos \theta = \frac{\vec e_{i, j} \cdot \vec p}{|\vec e_{i,j}||\vec p|}
-$$
-
-求める距離は
-$$
-d = \sin \theta |\vec p|.
-$$
-
-よって，
-$$
-\left(\frac{d}{|\vec p|}\right)^2 + \left(\frac{\vec e_{i, j} \cdot \vec p}{|\vec e_{i,j}||\vec p|}\right)^2 = 1
-$$
-
-$$
-d = \sqrt{|\vec p|^2 - \left(\frac{\vec e_{i, j} \cdot \vec p}{|\vec e_{i,j}|}\right)^2}
-$$
-$$
-

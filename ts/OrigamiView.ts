@@ -2,6 +2,7 @@ export {View};
 import * as THREE from 'three';
 import * as MG from './MetaGraphs';
 import * as Geometry from './Geometry';
+import { Vector3 } from 'three';
 
 // 操作モード
 type Mode = 'SelectEdge'|'AddVertex';
@@ -27,6 +28,8 @@ class View {
   private addNodeEvent:(ev:MouseEvent)=>any;
   private selectEdgeEvent:(ev:MouseEvent)=>any;
   private changeFoldRateEvent:(ev:Event)=>any;
+  // 対称的な点を選択するモード
+  private symnum:undefined|number;
 
   /**
    * コンストラクタ
@@ -151,10 +154,8 @@ class View {
     const vec = new THREE.Vector3(
         x1, y1, 0,
     ).unproject(self.camera).sub(self.camera.position).normalize();
-    console.log('mousePosition1: ', vec);
     const distance = - self.camera.position.z / vec.z;
     vec.multiplyScalar(distance).add(self.camera.position);
-    console.log('mousePosition2: ', vec);
 
     self.mousePosition.x = vec.x;
     self.mousePosition.y = vec.y;
@@ -227,7 +228,6 @@ class View {
         }
       }
     }
-    console.log('バッファ配列長: ', this.g.verteciesBuffer.length);
   }
 
   /**
@@ -535,6 +535,15 @@ class View {
   }
 
   /**
+   * 対称的な点の設定
+   * 辺上の点を設定する部分に効果を与える
+   * @param {undefined|number} n
+   */
+  public setSymmetricMode(n:undefined|number) {
+    this.g.symnum = n;
+  }
+
+  /**
    * @param {any[]} data
    */
   private debugLog(...data: any[]) {
@@ -564,6 +573,7 @@ class OrigamiGraph extends MG.MetaGraph {
   public nearestVertex:PairEdgeVertex;
   // 追加予定の頂点
   public verteciesBuffer:PairEdgeVertex[] = [];
+  public symnum:undefined|number;
 
   /**
    * 初期化
@@ -630,7 +640,7 @@ class OrigamiGraph extends MG.MetaGraph {
         ],
     );
     const geometry = new THREE.BufferGeometry();
-    geometry.addAttribute(
+    geometry.setAttribute(
         'position',
         new THREE.Float32BufferAttribute(positions, 3),
     );
@@ -700,6 +710,38 @@ class OrigamiGraph extends MG.MetaGraph {
     const a = p1Norm*cos/e21Norm;
     const q = v1.add(e21.clone().multiplyScalar(a));
     return q;
+  }
+
+  /**
+   * 辺上の対称的な点へ移動する
+   * @param {MG.Edge} e
+   * @param {THREE.Vector3} p
+   * @param {undefined|number} symnum
+   */
+  private getSymmetricPoint(e:MG.Edge, p:THREE.Vector3, symnum:undefined|number) {
+    const v1 = (e.getNode1().getProp('vec') as THREE.Vector3).clone();
+    const v2 = (e.getNode2().getProp('vec') as THREE.Vector3).clone();
+    // v1 - v2間を1 + 1/symnum個に分割する
+    if (typeof(symnum) !== 'undefined') {
+      const nsplit = 1 + (1/symnum);
+      const alpha = 1 / nsplit;
+      // v1 -> v2の長さを1として
+      // v1 -> pの長さを求める
+      const norm1 = v2.clone().sub(v1).length();
+      const norm2 = p.clone().sub(v1).length();
+      // x must be 0 ~ 1
+      const x = norm2 / norm1;
+      // 0 <= t <= 1+(1/symnum)
+      const t = x / alpha;
+      if ((1/symnum) <= t) {
+        return v1;
+      } else {
+        const gamma = Math.floor(t) * symnum;
+        const beta = v2.clone().sub(v1).multiplyScalar(gamma);
+        return v1.clone().add(beta);
+      }
+    }
+    return p;
   }
 
   /**
@@ -782,7 +824,9 @@ class OrigamiGraph extends MG.MetaGraph {
    * @param {THREE.Vector3} p
    */
   public updateVertexOnNearestEdge(edge:MG.Edge, p:THREE.Vector3) {
-    const q = this.getNearestVertex(edge, p);
+    let q = this.getNearestVertex(edge, p);
+    // edge上の対称的な点に変換する
+    q = this.getSymmetricPoint(edge, q, this.symnum);
     const sphere:THREE.Mesh = this.nearestVertex.vertex.getProp('obj');
     sphere.position.set(q.x, q.y, q.z);
     this.nearestVertex.vertex.setProp('vec', q);
@@ -840,7 +884,7 @@ class OrigamiGraph extends MG.MetaGraph {
 
           const line = (edge.getProp('obj') as THREE.Line);
           const geometry = (line.geometry as THREE.BufferGeometry);
-          geometry.addAttribute(
+          geometry.setAttribute(
               'position',
               new THREE.Float32BufferAttribute(positions, 3),
           );
