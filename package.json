@@ -11,10 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.119.1",
+    "three": "^0.125.0",
     "typescript": "^3.9.7"
   },
   "devDependencies": {
+    "@types/three": "^0.125.0",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
     "eslint": "^7.6.0",

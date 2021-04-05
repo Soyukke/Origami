@@ -14,7 +14,7 @@ class View {
   private scene:THREE.Scene;
   private camera:THREE.Camera;
   private renderer:THREE.WebGLRenderer;
-  private geometry:THREE.Geometry;
+  private geometry:THREE.BoxGeometry;
   private material:THREE.Material;
   private cube:THREE.Mesh;
   private canvasId = '#canvas';
