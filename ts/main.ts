@@ -33,6 +33,27 @@ function addHeadOne(): void {
         ()=>view.foldingZatsu(view.g),
     );
   }
+
+  const axisPositionX = document.getElementById('axisPositionX');
+  const axisPositionY = document.getElementById('axisPositionY');
+  const a = 5;
+  if (axisPositionX instanceof HTMLInputElement) {
+    axisPositionX.addEventListener(
+      'input',
+      (event) => view.cameraMoveX(
+        a * Number.parseInt((event.target as HTMLInputElement).value)
+      )
+    );
+  }
+
+  if (axisPositionY instanceof HTMLInputElement) {
+    axisPositionY.addEventListener(
+      'input',
+      (event) => view.cameraMoveY(
+        a * Number.parseInt((event.target as HTMLInputElement).value)
+      )
+    );
+  }
 }
 
 /**

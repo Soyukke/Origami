@@ -107,6 +107,14 @@ class View {
     this.initGraph();
   }
 
+  cameraMoveX(move:number) {
+    this.camera.position.x = move;
+  }
+
+  cameraMoveY(move:number) {
+    this.camera.position.y = move;
+  }
+
   /**
    * 折り紙用グラフ初期化
    */
@@ -644,7 +652,7 @@ class OrigamiGraph extends MG.MetaGraph {
         'position',
         new THREE.Float32BufferAttribute(positions, 3),
     );
-    const material = new THREE.LineBasicMaterial({color: 0xAAAAAA});
+    const material = new THREE.LineBasicMaterial({color: 0xAAAAAA, linewidth: 10});
     const line = new THREE.Line(geometry, material);
     this.scene.add(line);
     // lineオブジェクトをエッジの情報として埋め込む
